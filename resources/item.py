@@ -1,4 +1,3 @@
-import sqlite3
 from flask_restful import Resource, Api, reqparse
 from flask_jwt import jwt_required
 from models.item import ItemModel
@@ -29,7 +28,7 @@ class Item(Resource):
         item = ItemModel(name, data['price'])
 
         try:
-            item.insert()
+            item.save_to_db()
         except:
             return {'message': 'An error has occurred'}, 500
 
@@ -37,14 +36,10 @@ class Item(Resource):
 
     @jwt_required()
     def delete(self, name):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
+        item = ItemModel.find_by_name(name)
 
-        query = 'DELETE FROM items WHERE name=?'
-        cursor.execute(query, (name,))
-
-        connection.commit()
-        connection.close()
+        if item:
+            item.delete_from_db()
 
         return {'message': 'Item deleted'}, 200
 
@@ -53,34 +48,17 @@ class Item(Resource):
         data = Item.parser.parse_args()
 
         item = ItemModel.find_by_name(name)
-        formatted_item = ItemModel(name, data['price'])
 
         if item is None:
-            try:
-                formatted_item.insert()
-            except:
-                return {'message': 'Error inserting item'}, 500
+            item = ItemModel(name, data['price'])
         else:
-            try:
-                formatted_item.update()
-            except:
-                return {'message': 'Error updating item'}, 500
+            item.price = data['price']
 
-        return formatted_item.json(), 200
+        item.save_to_db()
+
+        return item.json(), 200
 
 
 class ItemList(Resource):
     def get(self):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-
-        query = 'SELECT * FROM items'
-        results = cursor.execute(query)
-        rows = results.fetchall()
-        items = list(map(
-            lambda item: {'name': item[0], 'price': item[1]}, rows))
-
-        connection.commit()
-        connection.close()
-
-        return {'items': items}
+        return {'items': [x.json() for x in ItemModel.query.all()]}

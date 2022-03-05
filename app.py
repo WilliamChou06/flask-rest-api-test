@@ -10,11 +10,18 @@ from resources.item import Item, ItemList
 
 app = Flask(__name__)
 # To allow flask propagating exception even if debug is set to false on app
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PROPAGATE_EXCEPTIONS'] = True
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=30000000)
 app.secret_key = 'william'
 api = Api(app)
+
+
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
 
 jwt = JWT(app, authenticate, identity)
 
