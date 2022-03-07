@@ -3,6 +3,26 @@ from flask_restful import Resource, reqparse
 from models.user import UserModel
 
 
+class User(Resource):
+    @classmethod
+    def get(cls, user_id):
+        user = UserModel.find_by_id(user_id)
+
+        if not user:
+            return {'message': 'No user found'}, 404
+
+        return user.json(), 200
+
+    @classmethod
+    def delete(cls, user_id):
+        user = UserModel.find_by_id(user_id)
+        if not user:
+            return {'message': 'User does not exist'}, 404
+
+        user.delete_from_db()
+        return {'message': 'User deleted successfully'}, 200
+
+
 class UserRegister(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('username', type=str, required=True,
