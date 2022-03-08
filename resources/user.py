@@ -1,5 +1,6 @@
 import sqlite3
 from flask_restful import Resource, reqparse
+from flask_jwt_extended import create_access_token
 from models.user import UserModel
 
 
@@ -44,3 +45,22 @@ class UserRegister(Resource):
             return {"message": "User creation error"}, 500
 
         return {"message": "User created successfully"}, 201
+
+
+class UserLogin(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('username', type=str, required=True,
+                        help="This field is required")
+    parser.add_argument('password', type=str, required=True,
+                        help="This field is required")
+
+    @classmethod
+    def post(cls):
+        data = cls.parser.parse_args()
+
+        user = UserModel.find_by_username(data['username'])
+
+        if user and user.json()['password'] == data['password']:
+            return {'access_token': create_access_token(identity=data['username'])}, 200
+
+        return {'message': 'Invalid Credentials'}, 400

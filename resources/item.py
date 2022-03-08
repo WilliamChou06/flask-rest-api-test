@@ -1,5 +1,5 @@
 from flask_restful import Resource, Api, reqparse
-from flask_jwt import jwt_required
+from flask_jwt_extended import jwt_required
 from models.item import ItemModel
 
 
@@ -10,7 +10,7 @@ class Item(Resource):
                         required=True,
                         help="This field cannot be left blank!"
                         )
-    parser.add_argument('store_ird',
+    parser.add_argument('store_id',
                         type=int,
                         required=True,
                         help="This field cannot be left blank!"
